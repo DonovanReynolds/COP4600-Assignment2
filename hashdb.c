@@ -106,8 +106,8 @@ int insert(hashRecord* head, char* key, uint32_t value)
     //Release write lock 
 
 
-    //return 1 if hash found 0 if create new
-    return 0; 
+    //Return the head
+    return 1; 
 }
 int delete(hashRecord* head,char* key)
 {
@@ -131,5 +131,13 @@ uint32_t search(hashRecord* head,char* key)
 }
 void printHashDB(hashRecord* head)
 {
+    if (head == NULL)
+        return;
+    
+    printf("Hash:%u", head->hash);
+    printf("\nKey:%s", head->name);
+    printf("\nValue:%u", head->salary);
+    printf("\n\n");
+    printHashDB(head->next);
 
 }

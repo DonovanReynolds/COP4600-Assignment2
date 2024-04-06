@@ -30,7 +30,16 @@ void runCommand(char* command,char* name,char* salary)
 {
     if(strcmp(command,"insert") == 0)
     {
-        insert(NULL,name,stringToUINT32(salary,strlen(salary)-1));
+        if (hashDBHead == NULL)
+        {
+            hashDBHead = malloc(sizeof(hashRecord));
+            hashDBHead->salary = stringToUINT32(salary,strlen(salary)-1);
+            strcpy(hashDBHead->name,name);
+            hashDBHead->hash = jenkins_one_at_a_time_hash(name,strlen(name));
+            hashDBHead->next = NULL;
+            return;
+        }
+        hashDBHead = insert(hashDBHead,name,stringToUINT32(salary,strlen(salary)-1));
     }
     if(strcmp(command,"search") == 0)
     {
@@ -40,8 +49,9 @@ void runCommand(char* command,char* name,char* salary)
     {
         //delete(name);
     }
-    if (strcmp(command,"print"))
+    if (strcmp(command,"print") == 0)
     {
+        printf("%u, %s, %u",hashDBHead->hash,hashDBHead->name,hashDBHead->salary);
         //printHashDB(hashDBHead);
     }
 }
@@ -87,7 +97,6 @@ void readFile()
 
 int main() {
 
-    hashDBHead = malloc(sizeof(hashRecord));
     readFile();
 
     return 0;
