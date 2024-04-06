@@ -1,5 +1,7 @@
 #include "hashdb.h"
 
+//GPT WROTE THIS MERGE SORT
+
 hashRecord* merge(hashRecord* left, hashRecord* right) {
     hashRecord* result = NULL;
 
@@ -19,6 +21,7 @@ hashRecord* merge(hashRecord* left, hashRecord* right) {
     return result;
 }
 
+//GPT WROTE THIS SPLIT FUNCTION
 void split(hashRecord* source, hashRecord** left, hashRecord** right) {
     hashRecord* fast;
     hashRecord* slow;
@@ -44,6 +47,7 @@ void split(hashRecord* source, hashRecord** left, hashRecord** right) {
     }
 }
 
+//GPT WROTE THIS MERGE SORT
 void mergeSort(hashRecord** head) {
     hashRecord* current = *head;
     hashRecord* left;
@@ -57,7 +61,8 @@ void mergeSort(hashRecord** head) {
     mergeSort(&left);
     mergeSort(&right);
 
-
+    *head = merge(left, right);
+}
 
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
   size_t i = 0;
@@ -80,9 +85,10 @@ int insert(hashRecord* head, char* key, uint32_t value)
 
     //Acquire the write lock
 
-    //If hash found update
+    
     while(head->next != NULL)
     {
+        //If hash found update
         if(head->hash == hash)
         {
             head->salary = value;
@@ -90,20 +96,18 @@ int insert(hashRecord* head, char* key, uint32_t value)
         }
         head = head->next;
     }
+    //Otherwise make new node
     hashRecord* newRecord = malloc(sizeof(hashRecord));
-
     newRecord->salary = value;
     strcpy(newRecord->name,key);
     newRecord->hash = hash;
     newRecord->next = NULL;
     head->next = newRecord;
-    return 0;
+    //Release write lock 
 
 
-    //Otherwise make new node
-    //Release write lock
     //return 1 if hash found 0 if create new
-    return 0;
+    return 0; 
 }
 int delete(hashRecord* head,char* key)
 {
@@ -113,7 +117,7 @@ int delete(hashRecord* head,char* key)
     //If key is found remove from list free mem
     //Otherwise do nothing
     //Release write lock
-    //return 1 if deleted 0 if nothing
+    //return 1 if deleted 0 if nothing 
     return 0;
 }
 uint32_t search(hashRecord* head,char* key)
