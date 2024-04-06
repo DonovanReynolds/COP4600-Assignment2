@@ -1,5 +1,63 @@
 #include "hashdb.h"
 
+hashRecord* merge(hashRecord* left, hashRecord* right) {
+    hashRecord* result = NULL;
+
+    if (left == NULL)
+        return right;
+    else if (right == NULL)
+        return left;
+
+    if (left->hash <= right->hash) {
+        result = left;
+        result->next = merge(left->next, right);
+    } else {
+        result = right;
+        result->next = merge(left, right->next);
+    }
+
+    return result;
+}
+
+void split(hashRecord* source, hashRecord** left, hashRecord** right) {
+    hashRecord* fast;
+    hashRecord* slow;
+
+    if (source == NULL || source->next == NULL) {
+        *left = source;
+        *right = NULL;
+    } else {
+        slow = source;
+        fast = source->next;
+
+        while (fast != NULL) {
+            fast = fast->next;
+            if (fast != NULL) {
+                slow = slow->next;
+                fast = fast->next;
+            }
+        }
+
+        *left = source;
+        *right = slow->next;
+        slow->next = NULL;
+    }
+}
+
+void mergeSort(hashRecord** head) {
+    hashRecord* current = *head;
+    hashRecord* left;
+    hashRecord* right;
+
+    if (current == NULL || current->next == NULL)
+        return;
+
+    split(current, &left, &right);
+
+    mergeSort(&left);
+    mergeSort(&right);
+
+
 
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
   size_t i = 0;
@@ -41,9 +99,9 @@ int insert(hashRecord* head, char* key, uint32_t value)
     head->next = newRecord;
     return 0;
 
-    
+
     //Otherwise make new node
-    //Release write lock 
+    //Release write lock
     //return 1 if hash found 0 if create new
     return 0;
 }
@@ -55,7 +113,7 @@ int delete(hashRecord* head,char* key)
     //If key is found remove from list free mem
     //Otherwise do nothing
     //Release write lock
-    //return 1 if deleted 0 if nothing 
+    //return 1 if deleted 0 if nothing
     return 0;
 }
 uint32_t search(hashRecord* head,char* key)
