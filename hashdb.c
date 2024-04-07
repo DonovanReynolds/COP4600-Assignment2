@@ -68,11 +68,12 @@ hashRecord* makeNode(char* key, uint32_t value,uint32_t hash)
 {
 
 
-    hashRecord* newRecord = malloc(sizeof(hashRecord));
+    hashRecord* newRecord = (hashRecord*)malloc(sizeof(hashRecord));
     newRecord->salary = value;
     strcpy(newRecord->name,key);
     newRecord->hash = hash;
     newRecord->next = NULL;
+    return newRecord;
 
 }
 
@@ -90,60 +91,95 @@ uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
   return hash;
 }
 
-int insert(hashRecord** head, char* key, uint32_t value)
+int insert(hashRecord* head, char* key, uint32_t value)
 {
     //Compute the hash
     uint32_t hash = jenkins_one_at_a_time_hash(key,strlen(key));
     
     //Acquire the write lock
-
-    if ((*head) == NULL)
+   
+    hashRecord* searchResult = search(head,key);
+    
+    if (searchResult != NULL)
     {
-        hashRecord* temp = (makeNode(key,value,hash));
-        head = &temp;
-        return 0;
+        searchResult->salary = value;
+    }
+    else
+    {
+        hashRecord* newRecord = makeNode(key,value,hash);
+        //Otherwise make new node
+        hashRecord* temp = head;
+        while(temp->next != NULL)
+            temp = temp->next;
+        
+        temp->next = newRecord;
     }
     
-    while((*head)->next != NULL)
-    {
-        //If hash found update
-        if((*head)->hash == hash)
-        {
-            (*head)->salary = value;
-            return 1;
-        }
-        (*head) = (*head)->next;
-    }
-    //Otherwise make new node
-
-    hashRecord* newRecord = makeNode(key,value,hash);
-    (*head)->next = newRecord;
     //Release write lock 
 
 
     //Return 1
     return 1; 
 }
-int delete(hashRecord* head,char* key)
+hashRecord* delete(hashRecord* head,char* key)
 {
     //Compute hash
+    uint32_t hash = jenkins_one_at_a_time_hash(key,strlen(key));
     //Obtain write lock
+
+
     //Search for the hash
+    hashRecord* searchResult = search(head,key);
     //If key is found remove from list free mem
+
+    //Update to the head of the list if the delete is the first element
+    if (searchResult == head)
+    {
+        hashRecord* temp = head->next;
+        free(head);
+        //Release write lock
+
+        return temp;
+    }
+
+    if (searchResult != NULL)
+    {
+        hashRecord* temp = head;
+        while(temp->next != searchResult)
+            temp = temp->next;
+        temp->next = temp->next->next;
+    }
     //Otherwise do nothing
     //Release write lock
-    //return 1 if deleted 0 if nothing 
-    return 0;
+    return head;
 }
-uint32_t search(hashRecord* head,char* key)
+hashRecord* search(hashRecord* head,char* key)
 {
     //Compute hash
+    uint32_t hash = jenkins_one_at_a_time_hash(key,strlen(key));
     //Obtain read lock
+
     //Search the list
-    //If found return the value
+    hashRecord* temp = head;
+    if(temp->hash == hash)
+    {
+        return temp;
+    }
+    while(temp != NULL)
+    {
+        //If found return the value
+        if(temp->hash == hash)
+        {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    
     //Otherwise return NULL
-    return 0;
+    return NULL;
 }
+
+
 void printHashDB(hashRecord* head)
 {
     if (head == NULL)

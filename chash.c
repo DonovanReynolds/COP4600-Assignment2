@@ -30,20 +30,33 @@ void runCommand(char* command,char* name,char* salary)
 {
     if(strcmp(command,"insert") == 0)
     {
-        insert(&hashDBHead,name,stringToUINT32(salary,strlen(salary)-1));
+        if (hashDBHead == NULL)
+        {
+            uint32_t hash = jenkins_one_at_a_time_hash(name,strlen(name));
+            hashDBHead = makeNode(name,stringToUINT32(salary,strlen(salary)-1),hash);
+            return;
+        }
+        insert(hashDBHead,name,stringToUINT32(salary,strlen(salary)-1));
+        
     }
     if(strcmp(command,"search") == 0)
     {
-        //search(name);
+        hashRecord* searchResult = search(hashDBHead,name);
+        if (searchResult == NULL)
+            printf("No result found...\n");
+        else
+            printf("%s was found with a salary of %u", name,searchResult->salary);
     }
     if(strcmp(command,"delete") == 0)
     {
-        //delete(name);
+        hashDBHead = delete(hashDBHead,name);
     }
     if (strcmp(command,"print") == 0)
     {
-        printf("%u, %s, %u",hashDBHead->hash,hashDBHead->name,hashDBHead->salary);
-        //printHashDB(hashDBHead);
+        printf("\nNEW PRINT\n");
+        mergeSort(&hashDBHead);
+        printHashDB(hashDBHead);
+        
     }
 }
 
@@ -88,6 +101,7 @@ void readFile()
 
 int main() {
 
+    
     readFile();
 
     return 0;

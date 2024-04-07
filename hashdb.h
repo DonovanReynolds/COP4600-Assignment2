@@ -14,8 +14,9 @@ typedef struct hash_struct
   struct hash_struct *next;
 } hashRecord;
 
-
+hashRecord* makeNode(char* key, uint32_t value,uint32_t hash);
 int insert(hashRecord* head,char* key, uint32_t value);
-int delete(hashRecord* head,char* key);
-uint32_t search(hashRecord* head,char* key);
+hashRecord* delete(hashRecord* head,char* key);
+hashRecord* search(hashRecord* head,char* key);
 void printHashDB(hashRecord* head);
+void mergeSort(hashRecord** head);
