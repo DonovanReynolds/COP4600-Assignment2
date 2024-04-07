@@ -30,16 +30,7 @@ void runCommand(char* command,char* name,char* salary)
 {
     if(strcmp(command,"insert") == 0)
     {
-        if (hashDBHead == NULL)
-        {
-            hashDBHead = malloc(sizeof(hashRecord));
-            hashDBHead->salary = stringToUINT32(salary,strlen(salary)-1);
-            strcpy(hashDBHead->name,name);
-            hashDBHead->hash = jenkins_one_at_a_time_hash(name,strlen(name));
-            hashDBHead->next = NULL;
-            return;
-        }
-        hashDBHead = insert(hashDBHead,name,stringToUINT32(salary,strlen(salary)-1));
+        insert(&hashDBHead,name,stringToUINT32(salary,strlen(salary)-1));
     }
     if(strcmp(command,"search") == 0)
     {

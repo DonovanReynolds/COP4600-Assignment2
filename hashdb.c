@@ -64,6 +64,18 @@ void mergeSort(hashRecord** head) {
     *head = merge(left, right);
 }
 
+hashRecord* makeNode(char* key, uint32_t value,uint32_t hash)
+{
+
+
+    hashRecord* newRecord = malloc(sizeof(hashRecord));
+    newRecord->salary = value;
+    strcpy(newRecord->name,key);
+    newRecord->hash = hash;
+    newRecord->next = NULL;
+
+}
+
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
   size_t i = 0;
   uint32_t hash = 0;
@@ -78,35 +90,38 @@ uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
   return hash;
 }
 
-int insert(hashRecord* head, char* key, uint32_t value)
+int insert(hashRecord** head, char* key, uint32_t value)
 {
     //Compute the hash
     uint32_t hash = jenkins_one_at_a_time_hash(key,strlen(key));
-
+    
     //Acquire the write lock
 
+    if ((*head) == NULL)
+    {
+        hashRecord* temp = (makeNode(key,value,hash));
+        head = &temp;
+        return 0;
+    }
     
-    while(head->next != NULL)
+    while((*head)->next != NULL)
     {
         //If hash found update
-        if(head->hash == hash)
+        if((*head)->hash == hash)
         {
-            head->salary = value;
+            (*head)->salary = value;
             return 1;
         }
-        head = head->next;
+        (*head) = (*head)->next;
     }
     //Otherwise make new node
-    hashRecord* newRecord = malloc(sizeof(hashRecord));
-    newRecord->salary = value;
-    strcpy(newRecord->name,key);
-    newRecord->hash = hash;
-    newRecord->next = NULL;
-    head->next = newRecord;
+
+    hashRecord* newRecord = makeNode(key,value,hash);
+    (*head)->next = newRecord;
     //Release write lock 
 
 
-    //Return the head
+    //Return 1
     return 1; 
 }
 int delete(hashRecord* head,char* key)
