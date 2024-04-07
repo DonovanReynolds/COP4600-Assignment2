@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <string.h>
-
+#include "rwlocks.h"
 
 typedef struct hash_struct
 {
@@ -14,6 +14,7 @@ typedef struct hash_struct
   struct hash_struct *next;
 } hashRecord;
 
+uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length);
 hashRecord* makeNode(char* key, uint32_t value,uint32_t hash);
 int insert(hashRecord* head,char* key, uint32_t value);
 hashRecord* delete(hashRecord* head,char* key);

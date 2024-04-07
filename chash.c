@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "hashdb.h"
 
+extern rwlock_t mutex;
 /*
 COP 4600 Assignment 2: Concurrent Hash Table
 Worked on by:
@@ -13,6 +15,7 @@ Rodrigo Santos
 */
 
 hashRecord* hashDBHead = NULL;
+
 
 uint32_t stringToUINT32(char* string, int index)
 {
@@ -26,13 +29,13 @@ uint32_t stringToUINT32(char* string, int index)
 }
 
 
-void runCommand(char* command,char* name,char* salary)
+void* runCommand(char* command,char* name,char* salary)
 {
     if(strcmp(command,"insert") == 0)
     {
         if (hashDBHead == NULL)
         {
-            uint32_t hash = jenkins_one_at_a_time_hash(name,strlen(name));
+            uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)name,strlen(name));
             hashDBHead = makeNode(name,stringToUINT32(salary,strlen(salary)-1),hash);
             return;
         }
@@ -60,8 +63,11 @@ void runCommand(char* command,char* name,char* salary)
     }
 }
 
-void readFile()
+
+void readFileMultiThread()
 {
+
+
     FILE *input_file = fopen("commands.txt", "r");
     if (input_file == NULL) {
         perror("Error opening file");
@@ -71,6 +77,9 @@ void readFile()
     int num_threads;
     fscanf(input_file, "threads,%d,0", &num_threads);
     printf("Number of threads: %d\n", num_threads);
+    //pthread_t* allThreads = malloc(sizeof(pthread_t)*num_threads);
+    pthread_t thread1,thread2;
+
     char command[100];
     char name[100];
     char salary[100];
@@ -90,9 +99,55 @@ void readFile()
         strcpy(name,token);
         token = strtok(NULL, ",");
         strcpy(salary,token);
+        
+        pthread_create(&thread1,NULL,runCommand,NULL);
+        pthread_create(&thread1,NULL,runCommand,NULL);
+
+    }
+
+    
+    pthread_join(&thread1,NULL);
+    pthread_join(&thread2,NULL);
+    
+    fclose(input_file);
+
+}
+
+void readFileSingleThread()
+{
+    FILE *input_file = fopen("commands.txt", "r");
+    if (input_file == NULL) {
+        perror("Error opening file");
+        return ;
+    }
+
+    int num_threads;
+    fscanf(input_file, "threads,%d,0", &num_threads);
+    printf("Number of threads: %d\n", num_threads);
+
+    char command[100];
+    char name[100];
+    char salary[100];
+    char line[100];
+
+    while (fgets(line, sizeof(line), input_file) != NULL) {
+        // Remove newline character at the end, if present
+        size_t len = strlen(line);
+        if (line[len - 1] == '\n') {
+            line[len - 1] = '\0';
+        }
+        char* token = strtok(line, ",");
+        if(token == NULL)
+            continue;
+        strcpy(command,token);
+        token = strtok(NULL, ",");
+        strcpy(name,token);
+        token = strtok(NULL, ",");
+        strcpy(salary,token);
+
         runCommand(command,name,salary);
     }
-    
+
     fclose(input_file);
 
 }
@@ -101,8 +156,10 @@ void readFile()
 
 int main() {
 
-    
-    readFile();
+    rwlock_init(&mutex);
+    //readFile();
+    readFileMultiThread();
+    printf("All Done!");
 
     return 0;
 }

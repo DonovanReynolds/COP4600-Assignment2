@@ -1,5 +1,6 @@
 #include "hashdb.h"
 
+extern rwlock_t mutex;
 //GPT WROTE THIS MERGE SORT
 
 hashRecord* merge(hashRecord* left, hashRecord* right) {
@@ -94,10 +95,10 @@ uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
 int insert(hashRecord* head, char* key, uint32_t value)
 {
     //Compute the hash
-    uint32_t hash = jenkins_one_at_a_time_hash(key,strlen(key));
+    uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)key,strlen(key));
     
     //Acquire the write lock
-   
+    rwlock_acquire_writelock(&mutex);
     hashRecord* searchResult = search(head,key);
     
     if (searchResult != NULL)
@@ -116,7 +117,7 @@ int insert(hashRecord* head, char* key, uint32_t value)
     }
     
     //Release write lock 
-
+    rwlock_release_writelock(&mutex);
 
     //Return 1
     return 1; 
@@ -124,7 +125,7 @@ int insert(hashRecord* head, char* key, uint32_t value)
 hashRecord* delete(hashRecord* head,char* key)
 {
     //Compute hash
-    uint32_t hash = jenkins_one_at_a_time_hash(key,strlen(key));
+    uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)key,strlen(key));
     //Obtain write lock
 
 
@@ -156,7 +157,7 @@ hashRecord* delete(hashRecord* head,char* key)
 hashRecord* search(hashRecord* head,char* key)
 {
     //Compute hash
-    uint32_t hash = jenkins_one_at_a_time_hash(key,strlen(key));
+    uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)key,strlen(key));
     //Obtain read lock
 
     //Search the list

@@ -3,11 +3,9 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include "common.h"
-#include "common_threads.h"./c
 #include "rwlocks.h"
 
-
+rwlock_t mutex;
 
 void rwlock_init(rwlock_t *lock) {
     lock->readers = 0;
@@ -43,7 +41,7 @@ int read_loops;
 int write_loops;
 int counter = 0;
 
-rwlock_t mutex;
+
 
 void *reader(void *arg) {
     int i;
