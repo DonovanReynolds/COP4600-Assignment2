@@ -16,6 +16,15 @@ Rodrigo Santos
 
 hashRecord* hashDBHead = NULL;
 
+char command[100];
+char name[100];
+char salary[100];
+char** allCommands;
+int sizeOfArray;
+int num_threads;
+pthread_t* allThreads;
+
+FILE* outputFile;
 
 uint32_t stringToUINT32(char* string, int index)
 {
@@ -29,14 +38,19 @@ uint32_t stringToUINT32(char* string, int index)
 }
 
 
-void* runCommand(char* command,char* name,char* salary)
+
+void* runCommand(void* args)
 {
+    
     if(strcmp(command,"insert") == 0)
     {
         if (hashDBHead == NULL)
         {
+        
+            rwlock_acquire_writelock(&mutex);
             uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)name,strlen(name));
             hashDBHead = makeNode(name,stringToUINT32(salary,strlen(salary)-1),hash);
+            rwlock_release_writelock(&mutex);
             return;
         }
         insert(hashDBHead,name,stringToUINT32(salary,strlen(salary)-1));
@@ -46,9 +60,9 @@ void* runCommand(char* command,char* name,char* salary)
     {
         hashRecord* searchResult = search(hashDBHead,name);
         if (searchResult == NULL)
-            printf("No result found...\n");
+            fputs("No result found...\n",outputFile);
         else
-            printf("%s was found with a salary of %u", name,searchResult->salary);
+            fprintf(outputFile,"%s was found with a salary of %u", name,searchResult->salary);
     }
     if(strcmp(command,"delete") == 0)
     {
@@ -56,11 +70,11 @@ void* runCommand(char* command,char* name,char* salary)
     }
     if (strcmp(command,"print") == 0)
     {
-        printf("\nNEW PRINT\n");
         mergeSort(&hashDBHead);
         printHashDB(hashDBHead);
         
     }
+    
 }
 
 
@@ -74,92 +88,80 @@ void readFileMultiThread()
         return ;
     }
 
-    int num_threads;
+   
     fscanf(input_file, "threads,%d,0", &num_threads);
-    printf("Number of threads: %d\n", num_threads);
-    //pthread_t* allThreads = malloc(sizeof(pthread_t)*num_threads);
-    pthread_t thread1,thread2;
 
-    char command[100];
-    char name[100];
-    char salary[100];
+    allCommands = (char**)malloc(sizeof(char*)*num_threads);
+    allThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_threads);
+
     char line[100];
 
+    
     while (fgets(line, sizeof(line), input_file) != NULL) {
         // Remove newline character at the end, if present
+        char curCommand[400];
+        strcpy(curCommand,"");
         size_t len = strlen(line);
         if (line[len - 1] == '\n') {
             line[len - 1] = '\0';
         }
-        char* token = strtok(line, ",");
-        if(token == NULL)
-            continue;
-        strcpy(command,token);
-        token = strtok(NULL, ",");
-        strcpy(name,token);
-        token = strtok(NULL, ",");
-        strcpy(salary,token);
-        
-        pthread_create(&thread1,NULL,runCommand,NULL);
-        pthread_create(&thread1,NULL,runCommand,NULL);
 
-    }
+        strcat(curCommand,line);
 
-    
-    pthread_join(&thread1,NULL);
-    pthread_join(&thread2,NULL);
-    
-    fclose(input_file);
 
-}
 
-void readFileSingleThread()
-{
-    FILE *input_file = fopen("commands.txt", "r");
-    if (input_file == NULL) {
-        perror("Error opening file");
-        return ;
-    }
-
-    int num_threads;
-    fscanf(input_file, "threads,%d,0", &num_threads);
-    printf("Number of threads: %d\n", num_threads);
-
-    char command[100];
-    char name[100];
-    char salary[100];
-    char line[100];
-
-    while (fgets(line, sizeof(line), input_file) != NULL) {
-        // Remove newline character at the end, if present
-        size_t len = strlen(line);
-        if (line[len - 1] == '\n') {
-            line[len - 1] = '\0';
-        }
-        char* token = strtok(line, ",");
-        if(token == NULL)
-            continue;
-        strcpy(command,token);
-        token = strtok(NULL, ",");
-        strcpy(name,token);
-        token = strtok(NULL, ",");
-        strcpy(salary,token);
-
-        runCommand(command,name,salary);
+        //printf("%s\n",curCommand);
+        allCommands[sizeOfArray] = malloc(sizeof(curCommand));
+        strcpy(allCommands[sizeOfArray],curCommand);
+        sizeOfArray++;
     }
 
     fclose(input_file);
+    
 
 }
-
 
 
 int main() {
 
     rwlock_init(&mutex);
-    //readFile();
-    readFileMultiThread();
-    printf("All Done!");
+    
+    sizeOfArray = 0;
 
+    readFileMultiThread();
+    
+    outputFile = fopen("output.txt","w");
+    int j = 0;
+    for (j = 0; j < sizeOfArray;j++)
+    {
+            
+        char* token = strtok(allCommands[j], ",");
+        if(token == NULL)
+            continue;
+
+        strcpy(command,token);
+        token = strtok(NULL, ",");
+        strcpy(name,token);
+        token = strtok(NULL, ",");
+        strcpy(salary,token);
+
+        //printf("%s, %s, %s", command,name,salary);
+        //pthread_t curThread;
+        Pthread_create(&allThreads[j],NULL,runCommand,NULL);
+        Pthread_join(allThreads[j],NULL);
+
+        free(allCommands[j]);
+    }
+    free(allCommands);
+    free(allThreads);
+    /*
+    fprintf(outputFile,"Number of lock acquisitions: %d\n",lockAquired);
+    fprintf(outputFile,"Number of lock releases: %d\n",lockReleased);
+
+    fprintf(outputFile,"Final Table:\n");
+    //mergeSort(&hashDBHead);
+    //printHashDB(hashDBHead);
+    */
+    fclose(outputFile);
     return 0;
 }

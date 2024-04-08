@@ -1,6 +1,7 @@
 #include "hashdb.h"
 
 extern rwlock_t mutex;
+extern FILE* outputFile;
 //GPT WROTE THIS MERGE SORT
 
 hashRecord* merge(hashRecord* left, hashRecord* right) {
@@ -99,22 +100,21 @@ int insert(hashRecord* head, char* key, uint32_t value)
     
     //Acquire the write lock
     rwlock_acquire_writelock(&mutex);
-    hashRecord* searchResult = search(head,key);
-    
-    if (searchResult != NULL)
+    hashRecord* temp = head;
+    while(temp->next != NULL)
     {
-        searchResult->salary = value;
+        if (temp->hash == hash)
+        {
+            temp->salary = value;
+            rwlock_release_writelock(&mutex);
+        }
+        temp = temp->next;
     }
-    else
-    {
-        hashRecord* newRecord = makeNode(key,value,hash);
-        //Otherwise make new node
-        hashRecord* temp = head;
-        while(temp->next != NULL)
-            temp = temp->next;
-        
-        temp->next = newRecord;
-    }
+
+    hashRecord* newRecord = makeNode(key,value,hash);
+    //Otherwise make new node
+    temp->next = newRecord;
+
     
     //Release write lock 
     rwlock_release_writelock(&mutex);
@@ -127,10 +127,11 @@ hashRecord* delete(hashRecord* head,char* key)
     //Compute hash
     uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)key,strlen(key));
     //Obtain write lock
-
+    
 
     //Search for the hash
     hashRecord* searchResult = search(head,key);
+    rwlock_acquire_writelock(&mutex);
     //If key is found remove from list free mem
 
     //Update to the head of the list if the delete is the first element
@@ -139,7 +140,7 @@ hashRecord* delete(hashRecord* head,char* key)
         hashRecord* temp = head->next;
         free(head);
         //Release write lock
-
+        rwlock_release_writelock(&mutex);
         return temp;
     }
 
@@ -152,6 +153,7 @@ hashRecord* delete(hashRecord* head,char* key)
     }
     //Otherwise do nothing
     //Release write lock
+    rwlock_release_writelock(&mutex);
     return head;
 }
 hashRecord* search(hashRecord* head,char* key)
@@ -159,11 +161,12 @@ hashRecord* search(hashRecord* head,char* key)
     //Compute hash
     uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)key,strlen(key));
     //Obtain read lock
-
+    rwlock_acquire_readlock(&mutex);
     //Search the list
     hashRecord* temp = head;
     if(temp->hash == hash)
     {
+        rwlock_release_readlock(&mutex);
         return temp;
     }
     while(temp != NULL)
@@ -171,25 +174,44 @@ hashRecord* search(hashRecord* head,char* key)
         //If found return the value
         if(temp->hash == hash)
         {
+            rwlock_release_readlock(&mutex);
             return temp;
         }
         temp = temp->next;
     }
     
     //Otherwise return NULL
+    rwlock_release_readlock(&mutex);
     return NULL;
 }
 
 
 void printHashDB(hashRecord* head)
 {
+    rwlock_acquire_readlock(&mutex);
+    hashRecord* temp = head;
+    if (head == NULL)
+        return
+    printNode(head);
+    while(temp->next != NULL)
+    {
+        temp = temp->next;
+        printNode(temp);
+    }
+    rwlock_release_readlock(&mutex);
+
+}
+
+void freeHashRecord(hashRecord* head)
+{
     if (head == NULL)
         return;
-    
-    printf("Hash:%u", head->hash);
-    printf("\nKey:%s", head->name);
-    printf("\nValue:%u", head->salary);
-    printf("\n\n");
-    printHashDB(head->next);
+    freeHashRecord(head->next);
+    free(head);
+}
 
+void printNode(hashRecord* head)
+{
+
+    fprintf(outputFile,"%u,%s,%u\n",head->hash,head->name,head->salary);
 }

@@ -21,3 +21,5 @@ hashRecord* delete(hashRecord* head,char* key);
 hashRecord* search(hashRecord* head,char* key);
 void printHashDB(hashRecord* head);
 void mergeSort(hashRecord** head);
+void printNode(hashRecord* head);
+void freeHashRecord(hashRecord* head);
