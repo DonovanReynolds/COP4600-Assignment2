@@ -48,7 +48,6 @@ void* runCommand(void* args)
     {
         if (hashDBHead == NULL)
         {
-        
             rwlock_acquire_writelock(&mutex);
             uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)name,strlen(name));
             hashDBHead = makeNode(name,stringToUINT32(salary,strlen(salary)-1),hash);
@@ -72,7 +71,7 @@ void* runCommand(void* args)
     }
     if (strcmp(command,"print") == 0)
     {
-        //mergeSort(&hashDBHead);
+        mergeSort(&hashDBHead);
         printHashDB(hashDBHead);
         
     }
@@ -97,9 +96,8 @@ void readFileMultiThread()
     allThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_threads);
 
     char line[100];
-
-    
-    for (int i = 0; i < num_threads+1;i++) {
+    fgets(line, sizeof(line), input_file);
+    for (int i = 0; i < num_threads;i++) {
         
         fgets(line, sizeof(line), input_file);
         // Remove newline character at the end, if present
@@ -114,12 +112,10 @@ void readFileMultiThread()
 
 
 
-        //printf("%s\n",curCommand);
         allCommands[sizeOfArray] = malloc(sizeof(curCommand));
         strcpy(allCommands[sizeOfArray],curCommand);
         sizeOfArray++;
     }
-
     fclose(input_file);
     
 
@@ -162,7 +158,7 @@ int main() {
     fprintf(outputFile,"Number of lock releases: %d\n",lockReleased);
 
     fprintf(outputFile,"Final Table:\n");
-    //mergeSort(&hashDBHead);
+    mergeSort(&hashDBHead);
     printHashDB(hashDBHead);
     fclose(outputFile);
     

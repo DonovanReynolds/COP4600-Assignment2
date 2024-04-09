@@ -143,6 +143,7 @@ hashRecord* delete(hashRecord* head,char* key)
         rwlock_release_writelock(&mutex);
         return newHead;
     }
+    
 
     hashRecord* cur = head;
     hashRecord* prev = NULL;
@@ -150,9 +151,7 @@ hashRecord* delete(hashRecord* head,char* key)
     {
         if(cur->hash == hash)
         {
-            printf("Before:prev: %s   current: %s    next: %s\n",prev->name, cur->name, cur->next->name);
             prev->next = cur->next;
-            printf("After:prev: %s   current: %s    next: %s\n",prev->name, cur->name, cur->next->name);
             free(cur);
             rwlock_release_writelock(&mutex);
             return head;
@@ -160,6 +159,14 @@ hashRecord* delete(hashRecord* head,char* key)
         prev = cur;
         cur = cur->next;
     }
+    if(cur->hash == hash)
+    {
+        prev->next = cur->next;
+        free(cur);
+        rwlock_release_writelock(&mutex);
+        return head;
+    }
+    
     //Otherwise do nothing
     //Release write lock
     rwlock_release_writelock(&mutex);
@@ -198,10 +205,12 @@ hashRecord* search(hashRecord* head,char* key)
 void printHashDB(hashRecord* head)
 {
     rwlock_acquire_readlock(&mutex);
-    fprintf(outputFile,"\n\n");
+    fprintf(outputFile,"\n");
     hashRecord* temp = head;
     if (head == NULL)
-        return
+    {
+        return;
+    }
     printNode(head);
     while(temp->next != NULL)
     {
