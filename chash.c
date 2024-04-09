@@ -23,6 +23,8 @@ char** allCommands;
 int sizeOfArray;
 int num_threads;
 pthread_t* allThreads;
+int lockAquired = 0;
+int lockReleased = 0;
 
 FILE* outputFile;
 
@@ -70,7 +72,7 @@ void* runCommand(void* args)
     }
     if (strcmp(command,"print") == 0)
     {
-        mergeSort(&hashDBHead);
+        //mergeSort(&hashDBHead);
         printHashDB(hashDBHead);
         
     }
@@ -91,15 +93,17 @@ void readFileMultiThread()
    
     fscanf(input_file, "threads,%d,0", &num_threads);
 
-    allCommands = (char**)malloc(sizeof(char*)*num_threads);
+    allCommands = (char**)malloc(sizeof(char*)*(num_threads));
     allThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_threads);
 
     char line[100];
 
     
-    while (fgets(line, sizeof(line), input_file) != NULL) {
+    for (int i = 0; i < num_threads+1;i++) {
+        
+        fgets(line, sizeof(line), input_file);
         // Remove newline character at the end, if present
-        char curCommand[400];
+        char curCommand[100];
         strcpy(curCommand,"");
         size_t len = strlen(line);
         if (line[len - 1] == '\n') {
@@ -120,6 +124,7 @@ void readFileMultiThread()
     
 
 }
+
 
 
 int main() {
@@ -145,8 +150,6 @@ int main() {
         token = strtok(NULL, ",");
         strcpy(salary,token);
 
-        //printf("%s, %s, %s", command,name,salary);
-        //pthread_t curThread;
         Pthread_create(&allThreads[j],NULL,runCommand,NULL);
         Pthread_join(allThreads[j],NULL);
 
@@ -154,14 +157,15 @@ int main() {
     }
     free(allCommands);
     free(allThreads);
-    /*
+    
     fprintf(outputFile,"Number of lock acquisitions: %d\n",lockAquired);
     fprintf(outputFile,"Number of lock releases: %d\n",lockReleased);
 
     fprintf(outputFile,"Final Table:\n");
     //mergeSort(&hashDBHead);
-    //printHashDB(hashDBHead);
-    */
+    printHashDB(hashDBHead);
     fclose(outputFile);
+    
     return 0;
+
 }

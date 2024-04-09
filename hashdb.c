@@ -107,6 +107,7 @@ int insert(hashRecord* head, char* key, uint32_t value)
         {
             temp->salary = value;
             rwlock_release_writelock(&mutex);
+            return;
         }
         temp = temp->next;
     }
@@ -129,27 +130,35 @@ hashRecord* delete(hashRecord* head,char* key)
     //Obtain write lock
     
 
-    //Search for the hash
-    hashRecord* searchResult = search(head,key);
     rwlock_acquire_writelock(&mutex);
     //If key is found remove from list free mem
 
     //Update to the head of the list if the delete is the first element
-    if (searchResult == head)
+    
+    if (head->hash == hash)
     {
-        hashRecord* temp = head->next;
+        hashRecord* newHead = head->next;
         free(head);
         //Release write lock
         rwlock_release_writelock(&mutex);
-        return temp;
+        return newHead;
     }
 
-    if (searchResult != NULL)
+    hashRecord* cur = head;
+    hashRecord* prev = NULL;
+    while (cur->next != NULL)
     {
-        hashRecord* temp = head;
-        while(temp->next != searchResult)
-            temp = temp->next;
-        temp->next = temp->next->next;
+        if(cur->hash == hash)
+        {
+            printf("Before:prev: %s   current: %s    next: %s\n",prev->name, cur->name, cur->next->name);
+            prev->next = cur->next;
+            printf("After:prev: %s   current: %s    next: %s\n",prev->name, cur->name, cur->next->name);
+            free(cur);
+            rwlock_release_writelock(&mutex);
+            return head;
+        }
+        prev = cur;
+        cur = cur->next;
     }
     //Otherwise do nothing
     //Release write lock
@@ -189,6 +198,7 @@ hashRecord* search(hashRecord* head,char* key)
 void printHashDB(hashRecord* head)
 {
     rwlock_acquire_readlock(&mutex);
+    fprintf(outputFile,"\n\n");
     hashRecord* temp = head;
     if (head == NULL)
         return
@@ -204,6 +214,7 @@ void printHashDB(hashRecord* head)
 
 void freeHashRecord(hashRecord* head)
 {
+    
     if (head == NULL)
         return;
     freeHashRecord(head->next);
