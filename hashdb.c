@@ -149,6 +149,8 @@ hashRecord* delete(hashRecord* head,char* key)
     hashRecord* prev = NULL;
     while (cur->next != NULL)
     {
+        prev = cur;
+        cur = cur->next;
         if(cur->hash == hash)
         {
             prev->next = cur->next;
@@ -156,15 +158,6 @@ hashRecord* delete(hashRecord* head,char* key)
             rwlock_release_writelock(&mutex);
             return head;
         }
-        prev = cur;
-        cur = cur->next;
-    }
-    if(cur->hash == hash)
-    {
-        prev->next = cur->next;
-        free(cur);
-        rwlock_release_writelock(&mutex);
-        return head;
     }
     
     //Otherwise do nothing
@@ -217,7 +210,9 @@ void printHashDB(hashRecord* head)
         temp = temp->next;
         printNode(temp);
     }
+    fprintf(outputFile,"\n");
     rwlock_release_readlock(&mutex);
+
 
 }
 

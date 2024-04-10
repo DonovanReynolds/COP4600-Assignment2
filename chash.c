@@ -159,8 +159,20 @@ int main() {
 
     fprintf(outputFile,"Final Table:\n");
     mergeSort(&hashDBHead);
-    printHashDB(hashDBHead);
+    
+    hashRecord* temp = hashDBHead;
+    if (hashDBHead == NULL)
+    {
+        return;
+    }
+    printNode(hashDBHead);
+    while(temp->next != NULL)
+    {
+        temp = temp->next;
+        printNode(temp);
+    }
     fclose(outputFile);
+    freeHashRecord(hashDBHead);
     
     return 0;
 
