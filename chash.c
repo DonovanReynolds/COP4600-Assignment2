@@ -48,8 +48,9 @@ void* runCommand(void* args)
     {
         if (hashDBHead == NULL)
         {
-            rwlock_acquire_writelock(&mutex);
             uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)name,strlen(name));
+            fprintf(outputFile,"INSERT,%u,%s,%u\n",hash,name,stringToUINT32(salary,strlen(salary)-1));
+            rwlock_acquire_writelock(&mutex);
             hashDBHead = makeNode(name,stringToUINT32(salary,strlen(salary)-1),hash);
             rwlock_release_writelock(&mutex);
             return;
@@ -63,7 +64,7 @@ void* runCommand(void* args)
         if (searchResult == NULL)
             fputs("No result found...\n",outputFile);
         else
-            fprintf(outputFile,"%s was found with a salary of %u", name,searchResult->salary);
+            printNode(searchResult);
     }
     if(strcmp(command,"delete") == 0)
     {

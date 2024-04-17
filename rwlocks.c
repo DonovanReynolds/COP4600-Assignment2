@@ -29,7 +29,7 @@ void rwlock_acquire_readlock(rwlock_t *lock) {
 }
 
 void rwlock_release_readlock(rwlock_t *lock) {
-    fputs("READLOCK RELEASED\n\n",outputFile);
+    fputs("READLOCK RELEASED\n",outputFile);
     lockReleased++;
     Sem_wait(&lock->lock);
     lock->readers--;
@@ -45,7 +45,7 @@ void rwlock_acquire_writelock(rwlock_t *lock) {
 }
 
 void rwlock_release_writelock(rwlock_t *lock) {
-    fputs("WRITELOCK RELEASED\n\n",outputFile);
+    fputs("WRITELOCK RELEASED\n",outputFile);
     lockReleased++;
     Sem_post(&lock->writelock);
 }

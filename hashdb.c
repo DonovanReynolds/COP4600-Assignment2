@@ -2,6 +2,7 @@
 
 extern rwlock_t mutex;
 extern FILE* outputFile;
+
 //GPT WROTE THIS MERGE SORT
 
 hashRecord* merge(hashRecord* left, hashRecord* right) {
@@ -66,6 +67,7 @@ void mergeSort(hashRecord** head) {
     *head = merge(left, right);
 }
 
+
 hashRecord* makeNode(char* key, uint32_t value,uint32_t hash)
 {
 
@@ -99,6 +101,7 @@ int insert(hashRecord* head, char* key, uint32_t value)
     uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)key,strlen(key));
     
     //Acquire the write lock
+    fprintf(outputFile,"INSERT,%u,%s,%u\n",hash,key,value);
     rwlock_acquire_writelock(&mutex);
     hashRecord* temp = head;
     while(temp->next != NULL)
@@ -130,6 +133,7 @@ hashRecord* delete(hashRecord* head,char* key)
     //Obtain write lock
     
 
+    fprintf(outputFile,"DELETE,%s\n",key);
     rwlock_acquire_writelock(&mutex);
     //If key is found remove from list free mem
 
@@ -170,6 +174,7 @@ hashRecord* search(hashRecord* head,char* key)
     //Compute hash
     uint32_t hash = jenkins_one_at_a_time_hash((uint8_t*)key,strlen(key));
     //Obtain read lock
+    fprintf(outputFile,"SEARCH,%s\n",key);
     rwlock_acquire_readlock(&mutex);
     //Search the list
     hashRecord* temp = head;

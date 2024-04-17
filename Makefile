@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c99 -Wno-unused-variable -Wno-incompatible-pointer-types -Wno-argument-type -Wno-unused-parameter
+CFLAGS = -Wall -Wextra -std=c99 -Wno-unused-variable -Wno-incompatible-pointer-types -Wno-unused-parameter -Wno-return-type 
 
 # Source files
 SRCS = chash.c hashdb.c rwlocks.c
